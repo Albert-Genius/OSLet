@@ -18,9 +18,9 @@ Develop a little OS from zero.
 2. install X-server in windows10
 
    ```shell
-   # download moba-xterm and start it
+   # download moba-xterm, start it and add it to the firewall wite list
    # type the flowing command into ~/.bashrc(if you installed wsl2)
-   export DISPLAY=$(grep nameserver /etc/resolv.conf | awk '{print $2}'):0.0
+   export DISPLAY=$(route.exe print | grep 0.0.0.0 | head -1 | awk '{print $4}'):0.0
    ```
 
 3. install gcc & nasm
