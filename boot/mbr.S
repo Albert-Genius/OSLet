@@ -1,11 +1,14 @@
 ;--------------------------------------------------
-section mbr vstart=0x7c00
-    mov ax,0x00
+;section mbr vstart=0x7c00
+section mbr vstart=0x00
+    jmp 0x7c0:0x05
+    mov ax,cs
     mov ds,ax 
     mov es,ax
     mov ss,ax
     mov fs,ax
-    mov sp,0x7c00
+    ;mov sp,0x7c00
+    mov sp,0x00
     
 ;--------------------------------------------------
 ;clear screen
@@ -18,11 +21,6 @@ section mbr vstart=0x7c00
     mov dl,0x4f
     int 0x10
 
-;--------------------------------------------------
-;get the position of cursor
-    mov ah,0x03
-    mov bh,0x00
-    int 0x10
     
 ;--------------------------------------------------
 ;print hello world!
@@ -33,6 +31,7 @@ section mbr vstart=0x7c00
     mov al,0x01
     mov bh,0x00
     mov bl,0x02
+    mov dx,0x00 ;specify the position
     int 0x10
 
 ;--------------------------------------------------
