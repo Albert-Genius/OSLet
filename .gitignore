@@ -52,3 +52,5 @@ Mkfile.old
 dkms.conf
 .vscode/*
 bochsout.txt
+*.bin
+*.img

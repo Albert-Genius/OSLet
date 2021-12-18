@@ -7,6 +7,8 @@ section mbr vstart=0x00
     mov es,ax
     mov ss,ax
     mov fs,ax
+    mov ax,0xb800
+    mov gs,ax
     ;mov sp,0x7c00
     mov sp,0x00
     
@@ -24,15 +26,18 @@ section mbr vstart=0x00
     
 ;--------------------------------------------------
 ;print hello world!
-    mov ax,string
-    mov bp,ax
-    mov cx,12   ;the length of string
-    mov ah,0x13
-    mov al,0x01
-    mov bh,0x00
-    mov bl,0x02
-    mov dx,0x00 ;specify the position
-    int 0x10
+    mov byte [gs:0x00],'H'
+    mov byte [gs:0x02],'e'
+    mov byte [gs:0x04],'l'
+    mov byte [gs:0x06],'l'
+    mov byte [gs:0x08],'o'
+    mov byte [gs:0x0a],' '
+    mov byte [gs:0x0c],'W'
+    mov byte [gs:0x0e],'o'
+    mov byte [gs:0x10],'r'
+    mov byte [gs:0x12],'l'
+    mov byte [gs:0x14],'d'
+    mov byte [gs:0x16],'!'
 
 ;--------------------------------------------------
 ;forever loop
