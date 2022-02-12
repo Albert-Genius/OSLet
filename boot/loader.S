@@ -1,11 +1,69 @@
 %include "boot.inc"
-;--------------------------------------------------
-;section mbr vstart=LOADER_BASE_RAM_ADD
-    mov ax,0xb800
-    mov gs,ax
+section loader vstart=LOADER_BASE_RAM_ADD
+;STRAT
+    jmp start
 
 ;--------------------------------------------------
-;clear screen
+;Construct GDT
+GDT_BASE:
+    dd 0x0
+    dd 0x0
+CODE_SEG:
+    dd 0xffff
+    dd DESC_CODE_HIGH4
+DATA_STACK_SEG:
+    dd 0xffff
+    dd DESC_DATA_HIGH4
+DISPLAY_SEG:
+    dd (DISPLAY_BASE_RAM_ADD << 16) + 0x7
+    dd DESC_VIDEO_HIGH4
+
+GDT_SIZE equ ($ - GDT_BASE)
+GDT_LIMIT equ (GDT_SIZE - 1)
+;reserve 50 GDs
+times 50 dq 0x0
+
+;new a ptr to GDT ram address
+p_gdt dw GDT_LIMIT 
+        dd GDT_BASE
+
+;--------------------------------------------------
+;Define selectors
+SELECTOR_CODE equ ((0x1 << 3) + TI_GDT + RPL0)
+SELECTOR_DATA equ ((0x2 << 3) + TI_GDT + RPL0)
+SELECTOR_DISPLAY equ ((0x3 << 3) + TI_GDT + RPL0)
+
+
+;Start
+start:
+    call clear_screen
+    call printer1
+    call enter_p
+
+    jmp dword SELECTOR_CODE:start_pmode
+
+;--------------------------------------------------
+;func:enter protection mode
+enter_p:
+    ;step1:open A20
+    in al, 0x92
+    or al, 0x02
+    out 0x92, al
+
+    ;step2: load gdt to gdtr
+    lgdt [p_gdt]
+
+    ;step3: enable protection mode
+    mov eax, cr0
+    or eax, 0x1
+    mov cr0, eax
+
+    ;return
+    ret
+
+;--------------------------------------------------
+;func:clear screen
+clear_screen:
     mov ah,0x06
     mov al,0x00
     mov bh,0x07
@@ -14,21 +72,57 @@
     mov dh,0x18
     mov dl,0x4f
     int 0x10
+    ;return 
+    ret
 
 ;--------------------------------------------------
-;print hello world!
-    mov byte [gs:0x00],'H'
-    mov byte [gs:0x02],'e'
-    mov byte [gs:0x04],'l'
-    mov byte [gs:0x06],'l'
-    mov byte [gs:0x08],'o'
+;func:printer1 !
+printer1:
+    mov ax,DISPLAY_BASE_RAM_ADD >> 4
+    mov gs,ax
+    mov byte [gs:0x00],'E'
+    mov byte [gs:0x02],'n'
+    mov byte [gs:0x04],'t'
+    mov byte [gs:0x06],'e'
+    mov byte [gs:0x08],'r'
     mov byte [gs:0x0a],' '
-    mov byte [gs:0x0c],'W'
-    mov byte [gs:0x0e],'o'
-    mov byte [gs:0x10],'r'
-    mov byte [gs:0x12],'l'
-    mov byte [gs:0x14],'d'
-    mov byte [gs:0x16],'!'
+    mov byte [gs:0x0c],'P'
+    mov byte [gs:0x0e],'r'
+    mov byte [gs:0x10],'o'
+    mov byte [gs:0x12],'t'
+    mov byte [gs:0x14],'e'
+    mov byte [gs:0x16],'c'
+    mov byte [gs:0x18],'t'
+    mov byte [gs:0x1a],'.'
+    mov byte [gs:0x1c],'.'
+    mov byte [gs:0x1e],'.'
+    ;return
+    ret
+     
 
-;infinite loop
+
+;--------------------------------------------------
+;protection mode entrence
+[bits 32]
+start_pmode:
+    mov ax, SELECTOR_DATA
+    mov ds, ax
+    mov es, ax
+    mov ss, ax
+    mov esp, LOADER_BASE_RAM_ADD
+
+    call printer2
+
     jmp $
+;--------------------------------------------------
+;func:printer2 !
+printer2:
+    mov ax, SELECTOR_DISPLAY
+    mov gs, ax
+    mov byte [gs:0x00],'D'
+    mov byte [gs:0x02],'o'
+    mov byte [gs:0x04],'n'
+    mov byte [gs:0x06],'e'
+    mov byte [gs:0x08],'.'
+    ;return
+    ret

@@ -1,4 +1,5 @@
-
+;Segment RAM Addaresss
+DISPLAY_BASE_RAM_ADD equ 0xb8000
 ;loader config
 LOADER_START_LBA equ 0x01
 LOADER_SECTOR_NUM equ 0x04

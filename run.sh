@@ -1,2 +1,2 @@
-#! /bin/sh
+#! /bin/bash
 bochs -f config/bochs.rc
