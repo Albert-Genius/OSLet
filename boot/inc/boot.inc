@@ -35,3 +35,11 @@ RPL2  equ   10b
 RPL3  equ   11b
 TI_GDT	 equ   000b
 TI_LDT	 equ   100b
+
+;PDE base address
+PAGE_DIR_TABLE_BASE equ 0x100000
+
+;---------- page property ----------
+PG_P equ 1b
+PG_RW_W equ 10b
+PG_US_U equ 100b

@@ -27,6 +27,8 @@ times 50 dq 0x0
 p_gdt dw GDT_LIMIT 
         dd GDT_BASE
 
+p_total_memory dd 0
+
 ;--------------------------------------------------
 ;Define selectors
 SELECTOR_CODE equ ((0x1 << 3) + TI_GDT + RPL0)
@@ -38,6 +40,7 @@ SELECTOR_DISPLAY equ ((0x3 << 3) + TI_GDT + RPL0)
 start:
     call clear_screen
     call printer1
+    call get_total_memory
     call enter_p
 
     jmp dword SELECTOR_CODE:start_pmode
@@ -60,6 +63,40 @@ enter_p:
 
     ;return
     ret
+
+;--------------------------------------------------
+;func:get total memory
+get_total_memory:
+    mov ax, 0xe801
+    int 0x15
+    jnc .postprocess
+    hlt
+.postprocess:
+    ; low 15M address
+    mov cx, 0x400 
+    mul cx
+    shl edx, 16
+    and eax, 0xffff
+    or edx, eax
+    add edx, 0x1 << 20
+    mov esi, edx
+
+    ; > 16M address
+    xor eax, eax
+    mov ax, bx
+    mov ecx, 0x10000
+    mul ecx
+
+    ; sum
+    add esi, eax
+    mov edx, esi
+
+    ; store to memory
+    mov [p_total_memory], edx
+
+    ; return
+    ret
+
 
 ;--------------------------------------------------
 ;func:clear screen
@@ -126,3 +163,30 @@ printer2:
     mov byte [gs:0x08],'.'
     ;return
     ret
+
+;--------------------------------------------------
+;create Page Directory Entry & Page Table Entry
+setup_page:
+
+;clear pde
+    mov ecx, 1024
+    mov esi, 0
+.clear_pde:
+    mov dword [PAGE_DIR_TABLE_BASE + esi], 0
+    inc esi
+    loop .clear_pde
+
+;create pde
+.create_pde:
+    mov eax, PAGE_DIR_TABLE_BASE
+    add eax, 0x01000
+    mov ebx, eax
+    or eax, PG_US_U | PG_RW_W | PG_P
+    mov [PAGE_DIR_TABLE_BASE], eax ;first PDE
+    mov [PAGE_DIR_TABLE_BASE + (0xc00 >> 2 * 4)], eax ;0xc00 >> 2 = 768 PDE
+
+    ;last PDE point to it self
+    sub eax, 0x01000
+    mov [PAGE_DIR_TABLE_BASE + (0x1024 *4)], eax
+
+;create pte
