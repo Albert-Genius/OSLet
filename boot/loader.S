@@ -178,15 +178,38 @@ setup_page:
 
 ;create pde
 .create_pde:
+    ;last PDE point to it self
     mov eax, PAGE_DIR_TABLE_BASE
-    add eax, 0x01000
-    mov ebx, eax
     or eax, PG_US_U | PG_RW_W | PG_P
+    mov [PAGE_DIR_TABLE_BASE + (0x1024 *4)], eax
+
+    ;create kernel PDE
+    add eax, 0x01000
     mov [PAGE_DIR_TABLE_BASE], eax ;first PDE
     mov [PAGE_DIR_TABLE_BASE + (0xc00 >> 2 * 4)], eax ;0xc00 >> 2 = 768 PDE
 
-    ;last PDE point to it self
-    sub eax, 0x01000
-    mov [PAGE_DIR_TABLE_BASE + (0x1024 *4)], eax
+    ;create other kernel PDE
+    add eax, 0x01000
+    mov ecx, (1024-768-2) ;254 PDE
+    mov esi, 0
+    mov ebx, PAGE_DIR_TABLE_BASE + 0xc04
+.create_other_kernel_pde:
+    mov [ebx+esi*4], eax
+    add eax, 0x10000
+    inc esi
+    loop .create_other_kernel_pde
 
-;create pte
+
+;create pte, base_addr = PAGE_DIR_TABLE_BASE(0x100000) + 0x01000 , phyaddr 1M(0x0-0xfffff)
+    mov edx, PG_US_U | PG_RW_W | PG_P
+    mov ecx, 256 ;1M 
+    mov ebx, (PAGE_DIR_TABLE_BASE + 0x01000)
+    mov esi, 0
+.create_pte:
+    mov [ebx+esi*4], edx
+    add edx, 0x01000
+    inc esi
+    loop .create_pte
+
+;func return
+    ret

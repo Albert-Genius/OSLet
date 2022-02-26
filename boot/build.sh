@@ -1,3 +1,5 @@
 #!/bin/sh
-nasm -i inc -o mbr.bin mbr.S
-nasm -i inc -o loader.bin loader.S
+dir=`dirname $0`
+#echo $dir
+nasm -i $dir/inc -o $dir/mbr.bin $dir/mbr.S
+nasm -i $dir/inc -o $dir/loader.bin $dir/loader.S
