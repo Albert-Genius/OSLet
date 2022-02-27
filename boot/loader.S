@@ -181,7 +181,7 @@ setup_page:
     ;last PDE point to it self
     mov eax, PAGE_DIR_TABLE_BASE
     or eax, PG_US_U | PG_RW_W | PG_P
-    mov [PAGE_DIR_TABLE_BASE + (0x1024 *4)], eax
+    mov [PAGE_DIR_TABLE_BASE + (0x1023 *4)], eax
 
     ;create kernel PDE
     add eax, 0x01000
