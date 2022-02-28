@@ -150,6 +150,37 @@ start_pmode:
 
     call printer2
 
+enable_mem_page:
+    ;1.set up page
+    call setup_page
+
+    ;2.modify gdt addr
+    sgdt [p_gdt] 
+    mov ebx, [p_gdt + 2]
+    or dword [ebx + 0x8*3 + 4], 0xc0000000
+    or dword [p_gdt + 2], 0xc0000000
+
+    ;3.modify sp addr
+    or esp, 0xc0000000
+
+    ;4.cr3 point to PDE
+    mov eax, PAGE_DIR_TABLE_BASE
+    mov cr3, eax
+
+    ;5.set page enable bit
+    mov eax, cr0
+    or eax, 0x1<<31
+    mov cr0, eax
+
+    ;6.set new gdt
+    lgdt [p_gdt]
+
+    ;debug
+    mov byte [gs:80*2], 'P'
+    mov byte [gs:80*2+2], 'a'
+    mov byte [gs:80*2+4], 'g'
+    mov byte [gs:80*2+6], 'e'
+
     jmp $
 ;--------------------------------------------------
 ;func:printer2 !
